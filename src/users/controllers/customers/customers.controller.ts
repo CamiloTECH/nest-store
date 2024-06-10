@@ -8,8 +8,11 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { CreateCustomerDto, UpdateCustomerDto } from 'src/dtos/customer.dtos';
-import { CustomersService } from 'src/services/customers/customers.service';
+import {
+  CreateCustomerDto,
+  UpdateCustomerDto,
+} from 'src/users/dtos/customer.dtos';
+import { CustomersService } from 'src/users/services/customers/customers.service';
 
 @Controller('customers')
 export class CustomersController {
