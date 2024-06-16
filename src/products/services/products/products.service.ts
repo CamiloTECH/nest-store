@@ -1,30 +1,25 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
+import { Product } from 'src/products/entities/product.entity';
 import {
   CreateProductDto,
   UpdateProductDto,
 } from 'src/products/dtos/product.dtos';
-import { Product } from 'src/products/entities/product.entity';
 
 @Injectable()
 export class ProductsService {
-  private counterId = 1;
-  private products: Product[] = [
-    {
-      id: 1,
-      stock: 10,
-      price: 1000,
-      image: 'image',
-      name: 'product',
-      description: 'description',
-    },
-  ];
+  constructor(
+    @InjectRepository(Product) private products: Repository<Product>,
+  ) {}
 
   findAll() {
-    return this.products;
+    return this.products.find();
   }
 
-  findOne(id: number) {
-    const product = this.products.find((item) => item.id === id);
+  async findOne(id: number) {
+    const product = await this.products.findOne({ where: { id } });
     if (!product) {
       throw new NotFoundException(`Product #${id} not found`);
     }
@@ -32,35 +27,25 @@ export class ProductsService {
   }
 
   create(product: CreateProductDto) {
-    this.counterId += 1;
-    const newProduct = {
-      id: this.counterId,
-      ...product,
-    };
-    this.products.push(newProduct);
-    return newProduct;
+    const newProduct = this.products.create(product);
+    return this.products.save(newProduct);
   }
 
-  delete(id: number) {
-    const deleteIndex = this.products.findIndex((item) => item.id === id);
-    if (deleteIndex === -1) {
+  async delete(id: number) {
+    const deleteProduct = await this.products.delete({ id });
+
+    if (deleteProduct.affected === 0) {
       throw new NotFoundException(`Product ${id} not found`);
     }
-    this.products.splice(deleteIndex, 1);
-    return { status: true };
+    return deleteProduct;
   }
 
-  update(id: number, product: UpdateProductDto) {
-    const indexProduct = this.products.findIndex((item) => item.id === id);
-    if (indexProduct === -1) {
+  async update(id: number, product: UpdateProductDto) {
+    const updateProduct = await this.products.update({ id }, product);
+
+    if (updateProduct.affected === 0) {
       throw new NotFoundException(`Product ${id} not found`);
     }
-
-    const findProduct = this.products[indexProduct];
-    this.products[indexProduct] = {
-      ...findProduct,
-      ...product,
-    };
-    return this.products[indexProduct];
+    return updateProduct;
   }
 }

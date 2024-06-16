@@ -1,60 +1,45 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import { CreateBrandDto, UpdateBrandDto } from 'src/products/dtos/brand.dtos';
 import { Brand } from 'src/products/entities/brand.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class BrandsService {
-  private counterId = 1;
-  private brands: Brand[] = [
-    {
-      id: 1,
-      image: 'image',
-      name: 'apple',
-    },
-  ];
+  constructor(@InjectRepository(Brand) private brands: Repository<Brand>) {}
 
   findAll() {
-    return this.brands;
+    return this.brands.find();
   }
 
-  findOne(brandId: number) {
-    const findBrand = this.brands.find(({ id }) => id === brandId);
+  async findOne(id: number) {
+    const findBrand = await this.brands.findOne({ where: { id } });
     if (!findBrand) {
-      throw new NotFoundException(`Brand ${brandId} not found`);
+      throw new NotFoundException(`Brand ${id} not found`);
     }
     return findBrand;
   }
 
   create(brand: CreateBrandDto) {
-    this.counterId++;
-    const newBrand = {
-      id: this.counterId,
-      ...brand,
-    };
-    this.brands.push(newBrand);
-    return newBrand;
+    const newBrand = this.brands.create(brand);
+    return this.brands.save(newBrand);
   }
 
-  update(brand: UpdateBrandDto, brandId: number) {
-    const updateIndex = this.brands.findIndex(({ id }) => id === brandId);
-    if (updateIndex === -1) {
-      throw new NotFoundException(`Brand ${brandId} not found`);
+  async update(brand: UpdateBrandDto, id: number) {
+    const updateBrand = await this.brands.update({ id }, brand);
+    if (updateBrand.affected === 0) {
+      throw new NotFoundException(`Brand ${id} not found`);
     }
-    const brandUpdate = this.brands[updateIndex];
-    this.brands[updateIndex] = {
-      ...brandUpdate,
-      ...brand,
-    };
-    return this.brands[updateIndex];
+
+    return updateBrand;
   }
 
-  delete(brandId: number) {
-    const deleteIndex = this.brands.findIndex(({ id }) => id === brandId);
-    if (deleteIndex === -1) {
-      throw new NotFoundException(`Brand ${brandId} not found`);
+  async delete(id: number) {
+    const deleteBrand = await this.brands.delete({ id });
+    if (deleteBrand.affected === 0) {
+      throw new NotFoundException(`Brand ${id} not found`);
     }
 
-    this.brands.splice(deleteIndex, 1);
-    return true;
+    return deleteBrand;
   }
 }

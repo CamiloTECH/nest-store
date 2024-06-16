@@ -1,63 +1,46 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateUserDto, UpdateUserDto } from 'src/users/dtos/user.dtos';
 import { User } from 'src/users/entities/user.entity';
-import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class UsersService {
-  constructor(private configService: ConfigService) {}
-  private counterId = 1;
-  private users: User[] = [
-    {
-      id: 1,
-      email: 'email@gmail.com',
-      password: '12345',
-    },
-  ];
+  constructor(@InjectRepository(User) private users: Repository<User>) {}
 
   findAll() {
-    const apiKey = this.configService.get('API_KEY');
-    return { users: this.users, apiKey };
+    return this.users.find();
   }
 
-  findOne(userId: number) {
-    const findUser = this.users.find(({ id }) => id === userId);
+  async findOne(id: number) {
+    const findUser = await this.users.findOne({ where: { id } });
     if (!findUser) {
-      throw new NotFoundException(`User ${userId} not found`);
+      throw new NotFoundException(`User ${id} not found`);
     }
     return findUser;
   }
 
   create(user: CreateUserDto) {
-    this.counterId++;
-    const newUser = {
-      id: this.counterId,
-      ...user,
-    };
-    this.users.push(newUser);
-    return newUser;
+    const newUser = this.users.create(user);
+    return this.users.save(newUser);
   }
 
-  update(user: UpdateUserDto, userId: number) {
-    const updateIndex = this.users.findIndex(({ id }) => id === userId);
-    if (updateIndex === -1) {
-      throw new NotFoundException(`User ${userId} not found`);
+  async update(user: UpdateUserDto, id: number) {
+    const updateUser = await this.users.update({ id }, user);
+    if (updateUser.affected === 0) {
+      throw new NotFoundException(`User ${id} not found`);
     }
 
-    const userUpdate = this.users[updateIndex];
-    this.users[updateIndex] = {
-      ...userUpdate,
-      ...user,
-    };
-    return this.users[updateIndex];
+    return updateUser;
   }
 
-  delete(userId: number) {
-    const deleteIndex = this.users.findIndex(({ id }) => id === userId);
-    if (deleteIndex === -1) {
-      throw new NotFoundException(`User ${userId} not found`);
+  async delete(id: number) {
+    const deleteUser = await this.users.delete({ id });
+    if (deleteUser.affected === 0) {
+      throw new NotFoundException(`User ${id} not found`);
     }
-    this.users.splice(deleteIndex, 1);
-    return true;
+
+    return deleteUser;
   }
 }

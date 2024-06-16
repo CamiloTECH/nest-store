@@ -1,64 +1,50 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 import {
   CreateCustomerDto,
   UpdateCustomerDto,
 } from 'src/users/dtos/customer.dtos';
 import { Customer } from 'src/users/entities/customer.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class CustomersService {
-  private counterId = 1;
-  private customers: Customer[] = [
-    {
-      id: 1,
-      lastName: 'Montoya',
-      name: 'Camilo',
-      phone: 121515151,
-    },
-  ];
+  constructor(
+    @InjectRepository(Customer) private customers: Repository<Customer>,
+  ) {}
 
   findAll() {
     return this.customers;
   }
 
-  findOne(customerId: number) {
-    const findCustomer = this.customers.find(({ id }) => id === customerId);
+  async findOne(id: number) {
+    const findCustomer = await this.customers.findOne({ where: { id } });
     if (!findCustomer) {
-      throw new NotFoundException(`Customer ${customerId} not found`);
+      throw new NotFoundException(`Customer ${id} not found`);
     }
     return findCustomer;
   }
 
   create(customer: CreateCustomerDto) {
-    this.counterId++;
-    const newCustomer = {
-      id: this.counterId,
-      ...customer,
-    };
-    this.customers.push(newCustomer);
-    return newCustomer;
+    const newCustomer = this.customers.create(customer);
+    return this.customers.save(newCustomer);
   }
 
-  update(customer: UpdateCustomerDto, customerId: number) {
-    const updateIndex = this.customers.findIndex(({ id }) => id === customerId);
-    if (updateIndex === -1) {
-      throw new NotFoundException(`Customer ${customerId} not found`);
+  async update(customer: UpdateCustomerDto, id: number) {
+    const updateCustomer = await this.customers.update({ id }, customer);
+    if (updateCustomer.affected === 0) {
+      throw new NotFoundException(`Customer ${id} not found`);
     }
-    const customerUpdate = this.customers[updateIndex];
-    this.customers[updateIndex] = {
-      ...customerUpdate,
-      ...customer,
-    };
-    return this.customers[updateIndex];
+
+    return updateCustomer;
   }
 
-  delete(customerId: number) {
-    const deleteIndex = this.customers.findIndex(({ id }) => id === customerId);
-    if (deleteIndex === -1) {
-      throw new NotFoundException(`Customer ${customerId} not found`);
+  async delete(id: number) {
+    const deleteCustomer = await this.customers.delete({ id });
+    if (deleteCustomer.affected === 0) {
+      throw new NotFoundException(`Customer ${id} not found`);
     }
 
-    this.customers.splice(deleteIndex, 1);
-    return true;
+    return deleteCustomer;
   }
 }

@@ -20,6 +20,7 @@ const API_KEY = 'prueba apli key';
           type: 'postgres',
           synchronize: true,
           database: dbName,
+          autoLoadEntities: true,
         };
       },
     }),
