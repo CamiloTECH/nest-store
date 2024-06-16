@@ -1,5 +1,13 @@
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
 export class Brand {
-  name: string;
+  @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ type: 'text' })
+  name: string;
+
+  @Column({ type: 'text' })
   image: string;
 }
