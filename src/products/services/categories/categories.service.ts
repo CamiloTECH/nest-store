@@ -14,7 +14,7 @@ export class CategoriesService {
   ) {}
 
   findAll() {
-    return this.categories;
+    return this.categories.find();
   }
 
   async findOne(categoryId: number) {

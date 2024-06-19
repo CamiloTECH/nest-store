@@ -18,8 +18,8 @@ const API_KEY = 'prueba apli key';
           password,
           username: user,
           type: 'postgres',
-          synchronize: true,
           database: dbName,
+          synchronize: false,
           autoLoadEntities: true,
         };
       },
