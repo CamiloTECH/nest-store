@@ -7,15 +7,19 @@ import {
   CreateProductDto,
   UpdateProductDto,
 } from 'src/products/dtos/product.dtos';
+import { BrandsService } from '../brands/brands.service';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product) private products: Repository<Product>,
+    private brandsServices: BrandsService,
   ) {}
 
   findAll() {
-    return this.products.find();
+    return this.products.find({
+      relations: ['brand'],
+    });
   }
 
   async findOne(id: number) {
@@ -26,8 +30,12 @@ export class ProductsService {
     return product;
   }
 
-  create(product: CreateProductDto) {
+  async create(product: CreateProductDto) {
     const newProduct = this.products.create(product);
+    if (product.brandId) {
+      const brand = await this.brandsServices.findOne(product.brandId);
+      newProduct.brand = brand;
+    }
     return this.products.save(newProduct);
   }
 
@@ -41,8 +49,21 @@ export class ProductsService {
   }
 
   async update(id: number, product: UpdateProductDto) {
-    const updateProduct = await this.products.update({ id }, product);
+    const { brandId, description, image, name, price, stock } = product;
+    const newProduct = {
+      brand: null,
+      description,
+      image,
+      name,
+      price,
+      stock,
+    };
+    if (brandId) {
+      const brand = await this.brandsServices.findOne(brandId);
+      newProduct.brand = brand;
+    }
 
+    const updateProduct = await this.products.update({ id }, newProduct);
     if (updateProduct.affected === 0) {
       throw new NotFoundException(`Product ${id} not found`);
     }

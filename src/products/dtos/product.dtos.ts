@@ -29,6 +29,10 @@ export class CreateProductDto {
   @IsString()
   @IsNotEmpty()
   readonly description: string;
+
+  @IsNotEmpty()
+  @IsPositive()
+  readonly brandId: number;
 }
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {}
