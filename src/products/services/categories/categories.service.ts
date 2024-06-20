@@ -20,6 +20,7 @@ export class CategoriesService {
   async findOne(categoryId: number) {
     const findCategory = await this.categories.findOne({
       where: { id: categoryId },
+      relations: ['products'],
     });
     if (!findCategory) {
       throw new NotFoundException(`Category ${categoryId} not found`);

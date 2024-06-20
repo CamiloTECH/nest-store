@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsNotEmpty,
   IsNumber,
   IsPositive,
@@ -33,6 +34,10 @@ export class CreateProductDto {
   @IsNotEmpty()
   @IsPositive()
   readonly brandId: number;
+
+  @IsArray()
+  @IsNotEmpty()
+  readonly categoriesIds: number[];
 }
 
 export class UpdateProductDto extends PartialType(CreateProductDto) {}

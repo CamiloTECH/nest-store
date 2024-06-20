@@ -1,19 +1,21 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 import { Product } from 'src/products/entities/product.entity';
 import {
   CreateProductDto,
   UpdateProductDto,
 } from 'src/products/dtos/product.dtos';
-import { BrandsService } from '../brands/brands.service';
+import { Category } from '../../entities/category.entity';
+import { Brand } from 'src/products/entities/brand.entity';
 
 @Injectable()
 export class ProductsService {
   constructor(
     @InjectRepository(Product) private products: Repository<Product>,
-    private brandsServices: BrandsService,
+    @InjectRepository(Brand) private brands: Repository<Brand>,
+    @InjectRepository(Category) private categories: Repository<Category>,
   ) {}
 
   findAll() {
@@ -23,7 +25,10 @@ export class ProductsService {
   }
 
   async findOne(id: number) {
-    const product = await this.products.findOne({ where: { id } });
+    const product = await this.products.findOne({
+      where: { id },
+      relations: ['brand', 'categories'],
+    });
     if (!product) {
       throw new NotFoundException(`Product #${id} not found`);
     }
@@ -33,8 +38,16 @@ export class ProductsService {
   async create(product: CreateProductDto) {
     const newProduct = this.products.create(product);
     if (product.brandId) {
-      const brand = await this.brandsServices.findOne(product.brandId);
+      const brand = await this.brands.findOne({
+        where: { id: product.brandId },
+      });
       newProduct.brand = brand;
+    }
+    if (product.categoriesIds) {
+      const categories = await this.categories.findBy({
+        id: In(product.categoriesIds),
+      });
+      newProduct.categories = categories;
     }
     return this.products.save(newProduct);
   }
@@ -51,7 +64,6 @@ export class ProductsService {
   async update(id: number, product: UpdateProductDto) {
     const { brandId, description, image, name, price, stock } = product;
     const newProduct = {
-      brand: null,
       description,
       image,
       name,
@@ -59,7 +71,10 @@ export class ProductsService {
       stock,
     };
     if (brandId) {
-      const brand = await this.brandsServices.findOne(brandId);
+      const brand = await this.brands.findOne({
+        where: { id: brandId },
+      });
+      // @ts-expect-error Error inecesario
       newProduct.brand = brand;
     }
 
