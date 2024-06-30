@@ -14,7 +14,7 @@ export class CustomersService {
   ) {}
 
   findAll() {
-    return this.customers;
+    return this.customers.find();
   }
 
   async findOne(id: number) {
