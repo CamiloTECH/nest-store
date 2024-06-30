@@ -9,10 +9,16 @@ import { CustomersController } from './controllers/customers/customers.controlle
 import { CustomersService } from './services/customers/customers.service';
 import { Customer } from './entities/customer.entity';
 
+import { Order } from './entities/order.entity';
+import { OrderItem } from './entities/order-item.entity';
+
 import { ProductsModule } from 'src/products/products.module';
 
 @Module({
-  imports: [ProductsModule, TypeOrmModule.forFeature([User, Customer])],
+  imports: [
+    ProductsModule,
+    TypeOrmModule.forFeature([User, Customer, Order, OrderItem]),
+  ],
   controllers: [UsersController, CustomersController],
   providers: [UsersService, CustomersService],
 })

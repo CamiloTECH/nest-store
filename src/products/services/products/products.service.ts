@@ -77,11 +77,43 @@ export class ProductsService {
       // @ts-expect-error Error inecesario
       newProduct.brand = brand;
     }
+    if (product.categoriesIds) {
+      const categories = await this.categories.findBy({
+        id: In(product.categoriesIds),
+      });
+      // @ts-expect-error Error inecesario
+      newProduct.categories = categories;
+    }
 
     const updateProduct = await this.products.update({ id }, newProduct);
     if (updateProduct.affected === 0) {
       throw new NotFoundException(`Product ${id} not found`);
     }
     return updateProduct;
+  }
+
+  async removeCategoryByProduct(productId: number, categoryId: number) {
+    const product = await this.products.findOne({
+      where: { id: productId },
+      relations: ['categories'],
+    });
+    product.categories = product.categories.filter(
+      ({ id }) => id !== categoryId,
+    );
+
+    return this.products.save(product);
+  }
+
+  async addCategoryToProduct(productId: number, categoryId: number) {
+    const product = await this.products.findOne({
+      where: { id: productId },
+      relations: ['categories'],
+    });
+    const categories = await this.categories.findOne({
+      where: { id: categoryId },
+    });
+    product.categories.push(categories);
+
+    return this.products.save(product);
   }
 }
