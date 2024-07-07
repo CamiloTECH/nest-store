@@ -6,12 +6,14 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDto, UpdateUserDto } from 'src/users/dtos/user.dtos';
 import { User } from 'src/users/entities/user.entity';
 import { CustomersService } from '../customers/customers.service';
+import { ProductsService } from 'src/products/services/products/products.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private users: Repository<User>,
     private customersService: CustomersService,
+    private productsService: ProductsService,
   ) {}
 
   findAll() {
@@ -59,5 +61,14 @@ export class UsersService {
     }
 
     return deleteUser;
+  }
+
+  async getOrderByUser(id: number) {
+    const user = this.findOne(id);
+    return {
+      date: new Date(),
+      user,
+      products: await this.productsService.findAll(),
+    };
   }
 }

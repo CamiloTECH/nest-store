@@ -25,6 +25,7 @@ import config from './config';
         DB_NAME: Joi.string().required(),
         API_KEY: Joi.string().required(),
         DB_PASSWORD: Joi.string().required(),
+        JWT_SECRET: Joi.string().required(),
       }),
     }),
     HttpModule,

@@ -9,7 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { ConfigType } from '@nestjs/config';
 import { Request } from 'express';
 import { Observable } from 'rxjs';
-import { IS_PUBLIC_KEY } from 'src/auth/decorators/public.decorator';
+import { IS_PUBLIC_KEY } from '../../decorators/public.decorator';
 import config from '../../../config';
 
 @Injectable()
